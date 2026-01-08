@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çiçek Meditasyonu Uygulaması</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #000;
+            color: #fff;
+            overflow: hidden;
+            transition: background-color 0.5s;
+        }
+
+        body.night-mode {
+            background-color: #111;
+        }
+
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .controls.hidden {
+            transform: translateX(350px);
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #ddd;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background-color: #222;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
+        #toggle-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 999;
+            width: auto;
+        }
+
+        .controls.hidden + #toggle-controls {
+            right: 20px;
+        }
+
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .color-inputs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .color-inputs input {
+            flex: 1;
+        }
+
+        #color-picker {
+            height: 40px;
+            padding: 2px;
+        }
+
+        #hex-input {
+            margin-bottom: 0;
+        }
+
+        h3 {
+            margin-bottom: 15px;
+            color: #4CAF50;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .footer-note {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            z-index: 1001;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                width: 250px;
+                right: 10px;
+                bottom: 10px;
+                padding: 15px;
+            }
+            
+            .controls.hidden {
+                transform: translateX(270px);
+            }
+            
+            #toggle-controls {
+                font-size: 12px;
+                padding: 8px 12px;
+                right: 10px;
+                bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div id="controls" class="controls">
+        <h3>Çiçek Kontrolleri</h3>
+        
+        <div class="control-group">
+            <label for="max-flowers">Maksimum Çiçek Sayısı</label>
+            <input type="number" id="max-flowers" min="1" max="500" value="100">
+        </div>
+        
+        <div class="control-group">
+            <label for="color-picker">Çiçek Rengi</label>
+            <div class="color-inputs">
+                <input type="color" id="color-picker" value="#FF6B6B">
+                <input type="text" id="hex-input" placeholder="#HEX Kodu" value="#FF6B6B">
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label for="size-select">Çiçek Boyutu</label>
+            <select id="size-select">
+                <option value="small">Küçük</option>
+                <option value="medium" selected>Orta</option>
+                <option value="large">Büyük</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label for="speed-select">Açılma Hızı</label>
+            <select id="speed-select">
+                <option value="slow">Yavaş</option>
+                <option value="normal" selected>Normal</option>
+                <option value="fast">Hızlı</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label for="type-select">Çiçek Türü</label>
+            <select id="type-select">
+                <option value="rose" selected>Gül</option>
+                <option value="daisy">Papatya</option>
+                <option value="lotus">Lotus</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label for="opacity-slider">Opaklık: <span id="opacity-value">0.8</span></label>
+            <input type="range" id="opacity-slider" min="0.1" max="1" step="0.1" value="0.8">
+        </div>
+        
+        <div class="control-group">
+            <div class="button-group">
+                <button id="clear-btn">Tümünü Temizle</button>
+                <button id="auto-mode-btn">Otomatik Mod</button>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <button id="screenshot-btn">Ekran Görüntüsü Al</button>
+        </div>
+        
+        <div class="control-group">
+            <div class="switch-container">
+                <span>Sesi Aç</span>
+                <label class="switch">
+                    <input type="checkbox" id="sound-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="switch-container">
+                <span>Gece Modu</span>
+                <label class="switch">
+                    <input type="checkbox" id="night-mode">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="switch-container">
+                <span>Animasyonları Kapat</span>
+                <label class="switch">
+                    <input type="checkbox" id="no-animations">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="info-text">
+            <p>Tıklayarak çiçek oluşturun. Çift tıklayarak fare izini açın/kapatın.</p>
+            <p>Klavye kısayolları: 'C' temizle, 'A' otomatik mod</p>
+        </div>
+    </div>
+    
+    <button id="toggle-controls">Kontrolleri Gizle</button>
+    
+    <div class="footer-note">Çiçek Meditasyonu Uygulaması - Stres Azaltıcı Sanat Terapisi</div>
+    
+    <audio id="bloom-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-water-bubble-1331.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="ambient-music" preload="auto" loop>
+        <source src="https://assets.mixkit.co/music/preview/mixkit-meditation-ambience-298.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // Burada JavaScript kodunuzu ekliyorum
+        // script.js içeriği buraya gelecek
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        const flowers = [];
+        const maxFlowers = document.getElementById('max-flowers');
+        let maxFlowerCount = parseInt(maxFlowers.value);
+        maxFlowers.addEventListener('change', () => maxFlowerCount = parseInt(maxFlowers.value));
+
+        const colorPicker = document.getElementById('color-picker');
+        const hexInput = document.getElementById('hex-input');
+        colorPicker.addEventListener('input', () => hexInput.value = colorPicker.value);
+        hexInput.addEventListener('input', () => colorPicker.value = hexInput.value);
+
+        const sizeSelect = document.getElementById('size-select');
+        const speedSelect = document.getElementById('speed-select');
+        const typeSelect = document.getElementById('type-select');
+        const opacitySlider = document.getElementById('opacity-slider');
+        const opacityValue = document.getElementById('opacity-value');
+        
+        opacitySlider.addEventListener('input', () => {
+            opacityValue.textContent = opacitySlider.value;
+        });
+
+        const clearBtn = document.getElementById('clear-btn');
+        clearBtn.addEventListener('click', () => flowers.length = 0);
+
+        const autoModeBtn = document.getElementById('auto-mode-btn');
+        let autoModeInterval;
+        autoModeBtn.addEventListener('click', () => {
+            if (autoModeInterval) {
+                clearInterval(autoModeInterval);
+                autoModeInterval = null;
+                autoModeBtn.textContent = 'Otomatik Mod';
+            } else {
+                autoModeInterval = setInterval(createRandomFlower, 2000);
+                autoModeBtn.textContent = 'Otomatik Modu Kapat';
+            }
+        });
+
+        const screenshotBtn = document.getElementById('screenshot-btn');
+        screenshotBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'cicek-meditasyonu.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+
+        const toggleControls = document.getElementById('toggle-controls');
+        toggleControls.addEventListener('click', () => {
+            const controls = document.getElementById('controls');
+            controls.classList.toggle('hidden');
+            toggleControls.textContent = controls.classList.contains('hidden') ? 'Kontrolleri Göster' : 'Kontrolleri Gizle';
+        });
+
+        const soundToggle = document.getElementById('sound-toggle');
+        const bloomSound = document.getElementById('bloom-sound');
+        const ambientMusic = document.getElementById('ambient-music');
+        soundToggle.addEventListener('change', () => {
+            if (soundToggle.checked) {
+                ambientMusic.play().catch(e => console.log("Otomatik ses çalma engellendi, kullanıcı etkileşimi gerekiyor"));
+            } else {
+                ambientMusic.pause();
+            }
+        });
+
+        const nightMode = document.getElementById('night-mode');
+        nightMode.addEventListener('change', () => {
+            document.body.classList.toggle('night-mode', nightMode.checked);
+        });
+
+        const noAnimations = document.getElementById('no-animations');
+
+        const colors = {
+            red: ['#FF6B6B', '#FF4757'],
+            blue: ['#2ED8FA', '#1E90FF'],
+            purple: ['#9B59B6', '#8E44AD'],
+            pink: ['#FF9FF3', '#FD79A8'],
+            yellow: ['#F9CA24', '#F7DC6F'],
+            green: ['#10AC84', '#1DD1A1'],
+            white: ['#FFFFFF'],
+            orange: ['#FFA502']
+        };
+
+        function getRandomColor() {
+            const colorGroups = Object.values(colors);
+            const group = colorGroups[Math.floor(Math.random() * colorGroups.length)];
+            return group[Math.floor(Math.random() * group.length)];
+        }
+
+        class Flower {
+            constructor(x, y, size, color, speed, type, opacity) {
+                this.x = x;
+                this.y = y;
+                this.size = size === 'small' ? 50 : size === 'medium' ? 100 : 150;
+                this.color = color;
+                this.speed = speed === 'slow' ? 0.01 : speed === 'normal' ? 0.02 : 0.05;
+                this.type = type;
+                this.opacity = opacity;
+                this.petals = Math.floor(Math.random() * 4) + 5; // 5-8 yaprak
+                this.openness = 0; // 0 kapalı, 1 tam açık
+                this.glow = 0;
+                this.swayAngle = 0;
+                this.swaySpeed = 0.01 + Math.random() * 0.02;
+            }
+
+            update() {
+                if (this.openness < 1) {
+                    this.openness += this.speed;
+                    if (this.openness > 1) this.openness = 1;
+                    if (this.openness === 1 && soundToggle.checked) {
+                        bloomSound.currentTime = 0;
+                        bloomSound.play().catch(e => console.log("Ses çalınamadı"));
+                    }
+                } else {
+                    this.swayAngle += this.swaySpeed;
+                    this.glow = Math.sin(this.swayAngle) * 0.2;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.opacity;
+                ctx.translate(this.x, this.y);
+                ctx.scale(this.openness, this.openness); // Büyüme animasyonu
+
+                // Yapraklar
+                for (let i = 0; i < this.petals; i++) {
+                    ctx.beginPath();
+                    const angle = (i / this.petals) * Math.PI * 2;
+                    ctx.rotate(angle);
+                    ctx.ellipse(0, 0, this.size / 2, this.size / 4, 0, 0, Math.PI * 2);
+                    const gradient = ctx.createLinearGradient(0, 0, this.size / 2, 0);
+                    gradient.addColorStop(0, this.color);
+                    gradient.addColorStop(1, '#000000');
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+                    ctx.rotate(-angle);
+                }
+
+                // Orta polen
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size / 10, 0, Math.PI * 2);
+                ctx.fillStyle = '#F7DC6F'; // Sarı polen
+                ctx.fill();
+
+                // Parlaklık efekti
+                if (this.openness === 1) {
+                    ctx.shadowBlur = 20 + this.glow * 10;
+                    ctx.shadowColor = this.color;
+                }
+
+                ctx.restore();
+            }
+        }
+
+        // Tıklama ile çiçek oluşturma
+        canvas.addEventListener('click', (e) => {
+            if (flowers.length >= maxFlowerCount) return;
+            const color = colorPicker.value || getRandomColor();
+            const size = sizeSelect.value;
+            const speed = speedSelect.value;
+            const type = typeSelect.value;
+            const opacity = parseFloat(opacitySlider.value);
+            flowers.push(new Flower(e.clientX, e.clientY, size, color, speed, type, opacity));
+        });
+
+        // Fare takibi için çiçek izi (mouse trail)
+        let mouseTrail = false;
+        canvas.addEventListener('dblclick', () => mouseTrail = !mouseTrail); // Çift tıklama ile toggle
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (mouseTrail && flowers.length < maxFlowerCount) {
+                if (Math.random() < 0.1) { // Her harekette değil, rastgele
+                    const color = getRandomColor();
+                    const size = 'small';
+                    const speed = 'fast';
+                    const type = 'rose';
+                    const opacity = 0.5;
+                    flowers.push(new Flower(e.clientX, e.clientY, size, color, speed, type, opacity));
+                }
+            }
+        });
+
+        // Sürükle-bırak (drag-drop) - Basit implementasyon
+        let dragging = false;
+        let dragStartX, dragStartY;
+        canvas.addEventListener('mousedown', (e) => {
+            dragging = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+        });
+        
+        canvas.addEventListener('mouseup', (e) => {
+            if (dragging && flowers.length < maxFlowerCount) {
+                const color = colorPicker.value;
+                const size = sizeSelect.value;
+                const speed = speedSelect.value;
+                const type = typeSelect.value;
+                const opacity = parseFloat(opacitySlider.value);
+                flowers.push(new Flower(e.clientX, e.clientY, size, color, speed, type, opacity));
+            }
+            dragging = false;
+        });
+
+        // Otomatik rastgele çiçek
+        function createRandomFlower() {
+            if (flowers.length >= maxFlowerCount) return;
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const color = getRandomColor();
+            const size = ['small', 'medium', 'large'][Math.floor(Math.random() * 3)];
+            const speed = ['slow', 'normal', 'fast'][Math.floor(Math.random() * 3)];
+            const type = ['rose', 'daisy', 'lotus'][Math.floor(Math.random() * 3)];
+            const opacity = Math.random() * 0.5 + 0.5;
+            flowers.push(new Flower(x, y, size, color, speed, type, opacity));
+        }
+
+        // Animasyon döngüsü
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            flowers.forEach(flower => {
+                if (!noAnimations.checked) flower.update();
+                flower.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Opsiyonel: Zamanla solma
+        setInterval(() => {
+            if (flowers.length > 0 && Math.random() < 0.05) {
+                flowers.shift(); // En eski çiçeği kaldır
+            }
+        }, 10000);
+
+        // Mobil dokunmatik destek
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const color = colorPicker.value;
+            const size = sizeSelect.value;
+            const speed = speedSelect.value;
+            const type = typeSelect.value;
+            const opacity = parseFloat(opacitySlider.value);
+            flowers.push(new Flower(touch.clientX, touch.clientY, size, color, speed, type, opacity));
+        }, { passive: false });
+
+        // Erişilebilirlik: Klavye navigasyonu (basit)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'c' || e.key === 'C') clearBtn.click();
+            if (e.key === 'a' || e.key === 'A') autoModeBtn.click();
+        });
+
+        // İlk açılış turu (tooltip benzeri)
+        setTimeout(() => {
+            alert('Hoş geldiniz! Siyah arka plana tıklayarak çiçek açtırın. Kontrolleri sağ altta kullanın.\n\nKullanım ipuçları:\n- Tıklayarak çiçek oluşturun\n- Çift tıklayarak fare izini açın/kapatın\n- Kontrolleri gizlemek için sağ alttaki butonu kullanın');
+        }, 1000);
+    </script>
+</body>
+</html>
