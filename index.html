@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çiçek Meditasyonu</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="controls" class="controls">
+        <div class="control-group">
+            <label for="color-picker">Renk Seçici:</label>
+            <input type="color" id="color-picker" value="#FF6B6B">
+            <input type="text" id="hex-input" placeholder="HEX Kodu" value="#FF6B6B">
+        </div>
+        <div class="control-group">
+            <label>Çiçek Boyutu:</label>
+            <select id="size-select">
+                <option value="small">Küçük</option>
+                <option value="medium" selected>Orta</option>
+                <option value="large">Büyük</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>Açılma Hızı:</label>
+            <select id="speed-select">
+                <option value="slow">Yavaş</option>
+                <option value="normal" selected>Normal</option>
+                <option value="fast">Hızlı</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>Çiçek Türü:</label>
+            <select id="type-select">
+                <option value="rose">Gül</option>
+                <option value="daisy">Papatya</option>
+                <option value="lotus">Lotus</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>Saydamlık:</label>
+            <input type="range" id="opacity-slider" min="0.1" max="1" step="0.1" value="1">
+        </div>
+        <div class="control-group">
+            <label>Maks. Çiçek Sayısı:</label>
+            <input type="number" id="max-flowers" value="50" min="1">
+        </div>
+        <button id="clear-btn">Tümünü Temizle</button>
+        <button id="auto-mode-btn">Otomatik Mod</button>
+        <button id="screenshot-btn">Ekran Görüntüsü Al</button>
+        <button id="toggle-controls">Kontrolleri Gizle</button>
+        <!-- Opsiyonel özellikler -->
+        <div class="control-group">
+            <label>Ses Efektleri:</label>
+            <input type="checkbox" id="sound-toggle">
+        </div>
+        <div class="control-group">
+            <label>Gece Modu:</label>
+            <input type="checkbox" id="night-mode">
+        </div>
+        <div class="control-group">
+            <label>Animasyonları Kapat:</label>
+            <input type="checkbox" id="no-animations">
+        </div>
+    </div>
+    <audio id="bloom-sound" src="bloom.mp3"></audio> <!-- Ses dosyası ekleyin -->
+    <audio id="ambient-music" src="ambient.mp3" loop></audio> <!-- Ambient müzik ekleyin -->
+    <script src="script.js"></script>
+</body>
+</html>
